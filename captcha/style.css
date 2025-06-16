@@ -1,0 +1,123 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    font-family: sans-serif;
+    user-select: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    position:relative;
+    overflow: hidden;
+    /* background: radial-gradient(75% 75% at 50% 50%, #00000000 50%, #0000005a 100%) , repeating-conic-gradient(#facc15 0 15deg, #e8a514 15deg 30deg); */
+}
+
+/* body::after {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    left: -50%;
+    top: -50%;
+    width: 200%;
+    height: 200%;
+    background:repeating-conic-gradient(#facc15 0 15deg, #e8a514 15deg 30deg);
+    animation: spin 120s infinite linear;
+} */
+
+@keyframes spin {
+    to {transform: rotate(360deg);}
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+#captcha-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    justify-items: center;
+    align-items: center;
+    height: 100%;
+}
+
+#success-message {
+    text-align: center;
+    grid-row: 3;
+    grid-column: 1;
+    color: green;
+}
+
+#fail-message {
+    text-align: center;
+    grid-row: 1;
+    grid-column: 1;
+    color: red;
+}
+
+#selection-message {
+    text-align: center;
+    grid-row: 3;
+    grid-column: 1;
+}
+
+#instruction-message {
+    text-align: center;
+    padding: 20px;
+    padding-top: 10px;
+    grid-row: 3;
+    grid-column: 1;
+    width: 80%;
+    height: 100%;
+}
+
+#instruction-message h2 {
+    margin: 10px;
+}
+
+#instruction-message span {
+    animation: fade-out 800ms infinite alternate ease-in-out;
+}
+
+#coin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 25%;
+}
+
+.wallet {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    offset-anchor: top left;
+    offset-rotate: 0deg;
+}
+
+.left {
+    left: 20%;
+    top: 50%;
+}
+
+.center {
+    left: 50%;
+    top: 50%;
+    
+}
+
+.right {
+    left: 80%;
+    top: 50%;
+}
+
+@keyframes fade-out {
+    from {opacity: 100%;}
+    to {opacity: 0%;}
+}
+
+
