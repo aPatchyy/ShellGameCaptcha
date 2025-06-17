@@ -1,8 +1,8 @@
-const MIN_SWAP_RATE = 2     // Swaps-per-second at game start.
-const MAX_SWAP_RATE = 5     // Swaps-per-second at game end.
+const START_SWAP_RATE = 2       // Swaps-per-second at game start.
+const END_SWAP_RATE = 5     // Swaps-per-second at game end.
 const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) during which swapping occurs.
-const ALLOW_CONSECUTIVE_SWAPPING = true   // Allows the same pair of wallets to be swapped consecutively.
-const SWAP_RATE_EASING = (x) => x   // Configure how the swap rate moves from MIN to MAX over the game duration.
+const ALLOW_CONSECUTIVE_SWAPPING = false        // Allows the same pair of wallets to be swapped consecutively.
+const SWAP_RATE_EASING = (x) => 1 - (x-1)*(x-1)       // An easing function dictating how swap rate moves from START to END over the game duration.
 
 const container = document.getElementById("captcha-container")
 const instructionMessage = document.getElementById("instruction-message")
@@ -10,10 +10,10 @@ const selectionMessage = document.getElementById("selection-message")
 const successMessage = document.getElementById("success-message")
 const openWallet = document.getElementById("wallet-open")
 const coin = document.getElementById("coin")
-
-const WALLETS = [ document.getElementById("wallet-1"), document.getElementById("wallet-2"), document.getElementById("wallet-3")]
+const starburst = document.getElementById("starburst-wrapper")
+const wallets = [ document.getElementById("wallet-1"), document.getElementById("wallet-2"), document.getElementById("wallet-3")]
 const POSITIONS = ["left", "center", "right"]
-const WALLET_SPACING = container.getBoundingClientRect().width * 0.6 / 2
+const WALLET_SPACING = wallets[1].getBoundingClientRect().left - wallets[0].getBoundingClientRect().left
 
 const SHAKE_KEYFRAMES = [
     {transform: "translate(calc(-50% + 1px), calc(-50% - 1px)) rotate(0deg)"},
@@ -31,7 +31,7 @@ const SHAKE_KEYFRAMES = [
 
 const SUCCESS_COIN_KEYFRAMES = [
     {top: "50%", transform: "translate(-50%, -50%) scale(0, 0)"}, 
-    {top: "25%", transform: "translate(-50%, -50%) scale(1,1)"}
+    {top: "20%", transform: "translate(-50%, -50%) scale(1,1)"}
 ]
 
 let startTime
@@ -56,7 +56,7 @@ function initialize() {
     show(instructionMessage)
     show(coin)
     coinOscillationPlayer.play()
-    WALLETS.forEach((wallet, index) => {
+    wallets.forEach((wallet, index) => {
         setWalletPosition(wallet, POSITIONS[index])
         show(wallet)
     })
@@ -67,10 +67,13 @@ function handleGameStart() {
     startTime = Date.now()
     hide(instructionMessage)
     coinOscillationPlayer.pause()
-    coin.animate({top: "50%", left:"50%"}, {duration: 1000, easing: "ease-out"}).finished.then(e => {
+    coin.animate({top: "50%", left:"50%", transform: "translate(-50%, -50%)"}, {duration: 500, easing: "ease-in"}).finished.then(e => {
         coin.classList.add("center")
+        coinOscillationPlayer.cancel()
         hide(coin)
-        update()
+        setTimeout(() => {
+            update()
+        }, 250);
     })
 }
 
@@ -81,16 +84,16 @@ function handleGameRestart() {
     show(coin)
     hide(openWallet)
     hide(instructionMessage)
-    WALLETS.forEach(wallet => {
+    wallets.forEach(wallet => {
         setWalletPosition(wallet, "center")
         show(wallet)
     })
-    WALLETS[0].animate({left: "20%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
-        setWalletPosition(WALLETS[0], "left")
+    wallets[0].animate({left: "20%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
+        setWalletPosition(wallets[0], "left")
 
     })
-    WALLETS[2].animate({left: "80%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
-        setWalletPosition(WALLETS[2], "right")
+    wallets[2].animate({left: "80%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
+        setWalletPosition(wallets[2], "right")
     })
     
     setTimeout(() => {
@@ -99,15 +102,15 @@ function handleGameRestart() {
 }
 
 function handleWalletSelection(e) {
-    WALLETS.forEach(wallet => {
-            wallet.classList.add("selectable")
+    wallets.forEach(wallet => {
+            wallet.classList.remove("selectable")
             wallet.removeEventListener("pointerdown", handleWalletSelection)
     })
     hide(selectionMessage)
     const selectedWallet = e.target.parentElement
-    WALLETS.filter(wallet => wallet !== selectedWallet).forEach(wallet => hide(wallet))
+    wallets.filter(wallet => wallet !== selectedWallet).forEach(wallet => hide(wallet))
     if(!Array.from(selectedWallet.classList).includes("center")) {
-        selectedWallet.animate({left: "50%"}, {duration: 1000, easing: "ease-in-out"}).finished.then(e => {
+        selectedWallet.animate({left: "50%"}, {duration: 800, easing: "ease-in-out"}).finished.then(e => {
             setWalletPosition(selectedWallet, "center")
             revealWallet(selectedWallet)
         })
@@ -117,13 +120,14 @@ function handleWalletSelection(e) {
 }
 
 function revealWallet(selectedWallet) {
-    selectedWallet.animate(SHAKE_KEYFRAMES, { duration: 1000, direction: "normal", iterations: 2}).finished.then(e => {
+    selectedWallet.animate(SHAKE_KEYFRAMES, { delay: 250, duration: 1000, direction: "normal", iterations: 2}).finished.then(e => {
         hide(selectedWallet)
         show(openWallet)
-        if(selectedWallet === WALLETS[1]) {
+        if(selectedWallet === wallets[1]) {
             show(successMessage)
             show(coin)
-            coin.animate(SUCCESS_COIN_KEYFRAMES, {duration: 1000, easing: "ease-in-out"}).finished.then(e => {
+            show(starburst)
+            coin.animate(SUCCESS_COIN_KEYFRAMES, {duration: 500, easing: "ease-in-out"}).finished.then(e => {
                 coin.classList.remove("center")
                 coinOscillationPlayer.play()
             })
@@ -143,10 +147,10 @@ function update() {
     let wallet1
     let wallet2
     if(ALLOW_CONSECUTIVE_SWAPPING || !lastSwappedWallet) {
-        wallet1 = WALLETS[Math.floor(Math.random() * WALLETS.length)]
-        wallet2 = WALLETS.filter(wallet => wallet != wallet1)[Math.floor(Math.random() * (WALLETS.length - 1))]
+        wallet1 = wallets[Math.floor(Math.random() * wallets.length)]
+        wallet2 = wallets.filter(wallet => wallet != wallet1)[Math.floor(Math.random() * (wallets.length - 1))]
     } else {
-        const swappableWallets = WALLETS.filter(wallet => wallet !== lastSwappedWallet)
+        const swappableWallets = wallets.filter(wallet => wallet !== lastSwappedWallet)
         const randomNumber = Math.random()
         wallet1 = swappableWallets[Math.round(randomNumber)]
         wallet2 = swappableWallets[Math.round(1-randomNumber)]
@@ -163,11 +167,11 @@ function update() {
     } else {
         setTimeout(() => {
             show(selectionMessage)
-            WALLETS.forEach(wallet => {
+            wallets.forEach(wallet => {
                 wallet.classList.add("selectable")
                 wallet.addEventListener("pointerdown", handleWalletSelection)
             })
-        }, 250);
+        }, Math.max(duration, 500));
     }
 }
 
@@ -176,7 +180,7 @@ function swap(wallet1, wallet2, duration) {
     const position2 = Array.from(wallet2.classList).filter(c => POSITIONS.includes(c))[0]
     const positionIndex1 = POSITIONS.indexOf(position1)
     const positionIndex2 = POSITIONS.indexOf(position2)
-    const deltaX = (positionIndex2 - positionIndex1) * 117
+    const deltaX = (positionIndex2 - positionIndex1) * WALLET_SPACING
     const deltaY = (Math.abs(positionIndex2 - positionIndex1) - 1) * 50 + 100
     wallet1.style.offsetPath = `path("M 0 0 C 0 -${deltaY} ${deltaX} -${deltaY} ${deltaX} 0")` //moves in +x
     wallet2.style.offsetPath = `path("M 0 0 C 0 ${deltaY} ${-1 * deltaX} ${deltaY} ${-1 * deltaX} 0")` //moves in -x
@@ -193,9 +197,8 @@ function swap(wallet1, wallet2, duration) {
 }
 
 function currentSwapRate() {
-    let t = gameTime / GAME_DURATION
-    t = SWAP_RATE_EASING(t)
-    return MAX_SWAP_RATE * t + MIN_SWAP_RATE * (1 - t)
+    const t = SWAP_RATE_EASING(gameTime / GAME_DURATION)
+    return END_SWAP_RATE * t + START_SWAP_RATE * (1 - t)
 }
 
 function setWalletPosition(wallet, position) {

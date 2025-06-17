@@ -48,6 +48,11 @@ body {
     text-align: center;
     grid-row: 1;
     grid-column: 1;
+    
+}
+
+.fade-in {
+    animation: fade-in 500ms ease-out;
 }
 
 #instruction-message {
@@ -72,7 +77,8 @@ body {
     position: absolute;
     transform: translate(-50%, -50%);
     left: 50%;
-    top: 25%;
+    top: 20%;
+    filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.3));
 }
 
 .wallet {
@@ -98,10 +104,36 @@ body {
     top: 50%;
 }
 
+.starburst {
+    background-color: #feb624;
+    height: 100%;
+    aspect-ratio: 1;
+    clip-path: polygon(100% 50%,84.77% 59.32%,93.3% 75%,75.46% 75.46%,75% 93.3%,59.32% 84.77%,50% 100%,40.68% 84.77%,25% 93.3%,24.54% 75.46%,6.7% 75%,15.23% 59.32%,0% 50%,15.23% 40.68%,6.7% 25%,24.54% 24.54%,25% 6.7%,40.68% 15.23%,50% 0%,59.32% 15.23%,75% 6.7%,75.46% 24.54%,93.3% 25%,84.77% 40.68%);
+    animation: spin 15000ms infinite linear;
+}
+
+#starburst-wrapper {
+    grid-row: 1 / -1;
+    grid-column: 1;
+    height: 35%;
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+    transform: translate(0, -5px);
+}
+
 @keyframes fade-in-out {
     0% {opacity: 0%;}
     50% {opacity: 100%;}
     100% {opacity: 0%;}
+}
+
+@keyframes fade-in {
+    0% {opacity: 0%;}
+    50% {opacity: 100%;}
+}
+
+@keyframes spin {
+    from {transform: rotate(0);}
+    to {transform: rotate(1turn);}
 }
 
 
