@@ -1,12 +1,13 @@
-const MIN_SWAP_RATE = 1     // Swaps-per-second at game start.
+const MIN_SWAP_RATE = 2     // Swaps-per-second at game start.
 const MAX_SWAP_RATE = 5     // Swaps-per-second at game end.
-const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) over which swapping occurs.
+const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) during which swapping occurs.
+const ALLOW_CONSECUTIVE_SWAPPING = true   // Allows the same pair of wallets to be swapped consecutively.
+const SWAP_RATE_EASING = (x) => x   // Configure how the swap rate moves from MIN to MAX over the game duration.
 
 const container = document.getElementById("captcha-container")
 const instructionMessage = document.getElementById("instruction-message")
 const selectionMessage = document.getElementById("selection-message")
 const successMessage = document.getElementById("success-message")
-const failMessage = document.getElementById("fail-message")
 const openWallet = document.getElementById("wallet-open")
 const coin = document.getElementById("coin")
 
@@ -36,25 +37,28 @@ const SUCCESS_COIN_KEYFRAMES = [
 let startTime
 let gameTime = 0
 let coinOscillationPlayer = coin.animate([{transform: "translate(-50%, -75%)"}], {duration: 500, direction: "alternate", iterations: Number.MAX_SAFE_INTEGER, easing: "ease-in-out"})
-
+let lastSwappedWallet
 
 initialize()
-window.addEventListener("pointerdown", handleGameStart)
+
+setTimeout(() => {
+    window.addEventListener("pointerdown", handleGameStart)
+    show(instructionMessage.querySelector("span"))
+}, 1000);
+
 
 container.addEventListener("contextmenu", (e)=>e.preventDefault())
 
 
 function initialize() {
     gameTime = 0
-    hide(failMessage)
     hide(openWallet)
     show(instructionMessage)
     show(coin)
     coinOscillationPlayer.play()
     WALLETS.forEach((wallet, index) => {
+        setWalletPosition(wallet, POSITIONS[index])
         show(wallet)
-        wallet.classList.remove(...POSITIONS)
-        wallet.classList.add(POSITIONS[index])
     })
 }
 
@@ -72,15 +76,31 @@ function handleGameStart() {
 
 function handleGameRestart() {
     window.removeEventListener("pointerdown", handleGameRestart)
-    initialize()
+    gameTime = 0
+    coinOscillationPlayer.play()
+    show(coin)
+    hide(openWallet)
     hide(instructionMessage)
+    WALLETS.forEach(wallet => {
+        setWalletPosition(wallet, "center")
+        show(wallet)
+    })
+    WALLETS[0].animate({left: "20%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
+        setWalletPosition(WALLETS[0], "left")
+
+    })
+    WALLETS[2].animate({left: "80%"}, {duration: 500, easing: "ease-in-out", delay: 500}).finished.then( e => {
+        setWalletPosition(WALLETS[2], "right")
+    })
+    
     setTimeout(() => {
         handleGameStart()
-    }, 1000)
+    }, 1500)
 }
 
 function handleWalletSelection(e) {
     WALLETS.forEach(wallet => {
+            wallet.classList.add("selectable")
             wallet.removeEventListener("pointerdown", handleWalletSelection)
     })
     hide(selectionMessage)
@@ -88,8 +108,7 @@ function handleWalletSelection(e) {
     WALLETS.filter(wallet => wallet !== selectedWallet).forEach(wallet => hide(wallet))
     if(!Array.from(selectedWallet.classList).includes("center")) {
         selectedWallet.animate({left: "50%"}, {duration: 1000, easing: "ease-in-out"}).finished.then(e => {
-            selectedWallet.classList.remove(...POSITIONS)
-            selectedWallet.classList.add("center")
+            setWalletPosition(selectedWallet, "center")
             revealWallet(selectedWallet)
         })
     } else {
@@ -112,7 +131,6 @@ function revealWallet(selectedWallet) {
                 window.top.postMessage("success", '*');
             }, 3000);
         } else {
-            show(failMessage)
             show(instructionMessage)
             instructionMessage.querySelector("h2").textContent = "Try again?"
             window.addEventListener("pointerdown", handleGameRestart)
@@ -122,8 +140,19 @@ function revealWallet(selectedWallet) {
 
 function update() {
     gameTime = Date.now() - startTime
-    const wallet1 = WALLETS[Math.floor(Math.random() * WALLETS.length)]
-    const wallet2 = WALLETS.filter(wallet => wallet != wallet1)[Math.floor(Math.random() * (WALLETS.length - 1))]
+    let wallet1
+    let wallet2
+    if(ALLOW_CONSECUTIVE_SWAPPING || !lastSwappedWallet) {
+        wallet1 = WALLETS[Math.floor(Math.random() * WALLETS.length)]
+        wallet2 = WALLETS.filter(wallet => wallet != wallet1)[Math.floor(Math.random() * (WALLETS.length - 1))]
+    } else {
+        const swappableWallets = WALLETS.filter(wallet => wallet !== lastSwappedWallet)
+        const randomNumber = Math.random()
+        wallet1 = swappableWallets[Math.round(randomNumber)]
+        wallet2 = swappableWallets[Math.round(1-randomNumber)]
+    }
+    lastSwappedWallet = wallet1
+    
     const duration = 1000 / currentSwapRate()
     swap(wallet1, wallet2, duration)
 
@@ -135,6 +164,7 @@ function update() {
         setTimeout(() => {
             show(selectionMessage)
             WALLETS.forEach(wallet => {
+                wallet.classList.add("selectable")
                 wallet.addEventListener("pointerdown", handleWalletSelection)
             })
         }, 250);
@@ -150,8 +180,8 @@ function swap(wallet1, wallet2, duration) {
     const deltaY = (Math.abs(positionIndex2 - positionIndex1) - 1) * 50 + 100
     wallet1.style.offsetPath = `path("M 0 0 C 0 -${deltaY} ${deltaX} -${deltaY} ${deltaX} 0")` //moves in +x
     wallet2.style.offsetPath = `path("M 0 0 C 0 ${deltaY} ${-1 * deltaX} ${deltaY} ${-1 * deltaX} 0")` //moves in -x
-    wallet1.animate([{offsetDistance: "0%"},{offsetDistance: "100%"}], {duration: duration - 20, iterations: 1})
-    wallet2.animate([{offsetDistance: "0%"},{offsetDistance: "100%"}], {duration: duration - 20, iterations: 1})
+    wallet1.animate([{offsetDistance: "0%"},{offsetDistance: "100%"}], {duration: duration - 20, iterations: 1, easing: "ease-in-out"})
+    wallet2.animate([{offsetDistance: "0%"},{offsetDistance: "100%"}], {duration: duration - 20, iterations: 1, easing: "ease-in-out"})
     setTimeout(() => {
         wallet1.classList.replace(position1, position2)
         wallet1.style.offsetPath = "none"
@@ -164,7 +194,13 @@ function swap(wallet1, wallet2, duration) {
 
 function currentSwapRate() {
     let t = gameTime / GAME_DURATION
-    return (MAX_SWAP_RATE * t + MIN_SWAP_RATE * (1 - t))
+    t = SWAP_RATE_EASING(t)
+    return MAX_SWAP_RATE * t + MIN_SWAP_RATE * (1 - t)
+}
+
+function setWalletPosition(wallet, position) {
+    wallet.classList.remove(...POSITIONS)
+    wallet.classList.add(position)
 }
 
 function hide(element) {

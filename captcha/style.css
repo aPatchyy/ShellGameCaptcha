@@ -11,23 +11,10 @@ body {
     height: 100%;
     position:relative;
     overflow: hidden;
-    /* background: radial-gradient(75% 75% at 50% 50%, #00000000 50%, #0000005a 100%) , repeating-conic-gradient(#facc15 0 15deg, #e8a514 15deg 30deg); */
-}
-
-/* body::after {
-    z-index: -1;
-    content: '';
-    position: absolute;
-    left: -50%;
-    top: -50%;
-    width: 200%;
-    height: 200%;
-    background:repeating-conic-gradient(#facc15 0 15deg, #e8a514 15deg 30deg);
-    animation: spin 120s infinite linear;
-} */
-
-@keyframes spin {
-    to {transform: rotate(360deg);}
+    color: white;
+    font-family: "Poetsen One", sans-serif;
+    background: radial-gradient(75% 75% at 50% 50%, #00000000 50%, #0000005a 100%), url(img/background.png);
+    background-position: center;
 }
 
 .hide {
@@ -36,6 +23,10 @@ body {
 
 .show {
     display: block;
+}
+
+.selectable:hover {
+    cursor: pointer;
 }
 
 #captcha-container {
@@ -51,19 +42,11 @@ body {
     text-align: center;
     grid-row: 3;
     grid-column: 1;
-    color: green;
-}
-
-#fail-message {
-    text-align: center;
-    grid-row: 1;
-    grid-column: 1;
-    color: red;
 }
 
 #selection-message {
     text-align: center;
-    grid-row: 3;
+    grid-row: 1;
     grid-column: 1;
 }
 
@@ -82,7 +65,7 @@ body {
 }
 
 #instruction-message span {
-    animation: fade-out 800ms infinite alternate ease-in-out;
+    animation: fade-in-out 1600ms infinite alternate ease-in-out;
 }
 
 #coin {
@@ -115,9 +98,10 @@ body {
     top: 50%;
 }
 
-@keyframes fade-out {
-    from {opacity: 100%;}
-    to {opacity: 0%;}
+@keyframes fade-in-out {
+    0% {opacity: 0%;}
+    50% {opacity: 100%;}
+    100% {opacity: 0%;}
 }
 
 
