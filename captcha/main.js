@@ -1,5 +1,5 @@
 const START_SWAP_RATE = 2       // Swaps-per-second at game start.
-const END_SWAP_RATE = 5     // Swaps-per-second at game end.
+const END_SWAP_RATE = 6     // Swaps-per-second at game end.
 const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) during which swapping occurs.
 const ALLOW_CONSECUTIVE_SWAPPING = false        // Allows the same pair of wallets to be swapped consecutively.
 const SWAP_RATE_EASING = (x) => 1 - (x-1)*(x-1)       // An easing function dictating how swap rate moves from START to END over the game duration.
@@ -41,8 +41,9 @@ let lastSwappedWallet
 
 initialize()
 
+
 setTimeout(() => {
-    window.addEventListener("pointerdown", handleGameStart)
+    container.addEventListener("pointerdown", handleGameStart)
     show(instructionMessage.querySelector("span"))
 }, 1000);
 
@@ -63,7 +64,7 @@ function initialize() {
 }
 
 function handleGameStart() {
-    window.removeEventListener("pointerdown", handleGameStart)
+    container.removeEventListener("pointerdown", handleGameStart)
     startTime = Date.now()
     hide(instructionMessage)
     coinOscillationPlayer.pause()
@@ -78,7 +79,7 @@ function handleGameStart() {
 }
 
 function handleGameRestart() {
-    window.removeEventListener("pointerdown", handleGameRestart)
+    container.removeEventListener("pointerdown", handleGameRestart)
     gameTime = 0
     coinOscillationPlayer.play()
     show(coin)
@@ -137,7 +138,7 @@ function revealWallet(selectedWallet) {
         } else {
             show(instructionMessage)
             instructionMessage.querySelector("h2").textContent = "Try again?"
-            window.addEventListener("pointerdown", handleGameRestart)
+            container.addEventListener("pointerdown", handleGameRestart)
         }
     })
 }
