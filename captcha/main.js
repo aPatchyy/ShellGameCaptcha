@@ -1,6 +1,6 @@
 const START_SWAP_RATE = 2       // Swaps-per-second at game start.
 const END_SWAP_RATE = 6     // Swaps-per-second at game end.
-const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) during which swapping occurs.
+const GAME_DURATION = 10 * 1000     // Length of time (miliseconds) during which swapping occurs.
 const ALLOW_CONSECUTIVE_SWAPPING = false        // Allows the same pair of wallets to be swapped consecutively.
 const SWAP_RATE_EASING = (x) => 1 - (x-1)*(x-1)       // An easing function dictating how swap rate moves from START to END over the game duration.
 
@@ -36,7 +36,7 @@ const SUCCESS_COIN_KEYFRAMES = [
 
 let startTime
 let gameTime = 0
-let coinOscillationPlayer = coin.animate([{transform: "translate(-50%, -75%)"}], {duration: 500, direction: "alternate", iterations: Number.MAX_SAFE_INTEGER, easing: "ease-in-out"})
+let coinOscillationPlayer = coin.animate([{transform: "translate(-50%, -75%)"}], {duration: 500, direction: "alternate", iterations: Infinity, easing: "ease-in-out"})
 let lastSwappedWallet
 
 initialize()
@@ -136,8 +136,8 @@ function revealWallet(selectedWallet) {
                 window.top.postMessage("success", '*');
             }, 3000);
         } else {
-            show(instructionMessage)
             instructionMessage.querySelector("h2").textContent = "Try again?"
+            show(instructionMessage)
             container.addEventListener("pointerdown", handleGameRestart)
         }
     })
