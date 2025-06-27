@@ -1,8 +1,8 @@
 const START_SWAP_RATE = 2       // Swaps-per-second at game start.
-const END_SWAP_RATE = 6     // Swaps-per-second at game end.
+const END_SWAP_RATE = 6    // Swaps-per-second at game end.
 const GAME_DURATION = 30 * 1000     // Length of time (miliseconds) during which swapping occurs.
 const ALLOW_CONSECUTIVE_SWAPPING = false        // Allows the same pair of wallets to be swapped consecutively.
-const SWAP_RATE_EASING = (x) => 1 - (x-1)*(x-1)       // An easing function dictating how swap rate moves from START to END over the game duration.
+const SWAP_RATE_EASING = (x) => -(Math.cos(Math.PI * x) - 1) / 2   // Easing function dictating how swap rate moves from START to END over the game duration.
 
 const container = document.getElementById("captcha-container")
 const instructionMessage = document.getElementById("instruction-message")
